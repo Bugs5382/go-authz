@@ -46,6 +46,8 @@ are fine, removals need a major bump.
 
 - See `CLAUDE.md` for branch/commit/PR rules; they are enforced by the git hooks in `.claude/hooks`
   (run `bash .claude/hooks/install.sh` once per clone).
+- Open every PR as a draft. CI skips drafts, so run the full checks locally, push once they pass,
+  and mark the PR ready when the work is finished; see CLAUDE.md "CI and Actions minutes".
 - This is a PUBLIC library: no company, product, or internal names anywhere.
 - `Wildcard` ("*") is the wildcard token in `RBAC` grants and `Matrix` entries; it collides with a
   literal "*" value, so do not use wildcards for a dimension that legitimately holds "*".
