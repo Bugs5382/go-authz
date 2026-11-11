@@ -33,6 +33,7 @@ are fine, removals need a major bump.
 - `rbac.go`, `matrix.go` - the RBAC and responsibility-matrix rule types.
 - `doc.go`, `example_test.go` - package doc and runnable examples.
 - `authz_test.go` - unit tests.
+- `categories/` - category access resolver (parent chain, action implications, `stopInheriting`, `*`) built on `Policy`; `categories/vectors_test.go` runs `testdata/decide.json` (refresh with `task vectors:refresh`).
 
 ## Build, test, lint
 

@@ -1,0 +1,5 @@
+Shared access decision vectors (decide.json), vendored by 'task vectors:refresh'.
+Source repo: Bugs5382/node-raci-editor, path vectors/decide.json
+Source branch: main
+Source commit: 9315f3db3dc7cf230d896c543c3cb9d96b458a89
+Format and algorithm: vectors/README.md next to the source file.

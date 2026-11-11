@@ -47,6 +47,19 @@ tasks:
     cmds:
       - brew install golangci-lint gitleaks yamllint
       - go install golang.org/x/tools/cmd/goimports@latest
+  vectors:refresh:
+    desc: Refresh testdata/decide.json from the shared vectors (VECTORS_REPO sets the node-raci-editor checkout).
+    vars:
+      VECTORS_REPO: '{{default "../node-raci-editor" .VECTORS_REPO}}'
+    cmds:
+      - cp "{{.VECTORS_REPO}}/vectors/decide.json" testdata/decide.json
+      - |
+        printf '%s\n' \
+          "Shared access decision vectors (decide.json), vendored by 'task vectors:refresh'." \
+          "Source repo: Bugs5382/node-raci-editor, path vectors/decide.json" \
+          "Source branch: $(git -C "{{.VECTORS_REPO}}" rev-parse --abbrev-ref HEAD)" \
+          "Source commit: $(git -C "{{.VECTORS_REPO}}" rev-parse HEAD)" \
+          "Format and algorithm: vectors/README.md next to the source file." > testdata/SOURCE
   license:
     desc: Verify every source file carries the MIT license header (CI; never writes).
     cmds:
