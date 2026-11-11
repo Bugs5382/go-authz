@@ -65,6 +65,30 @@ auth-decision logging downstream.
 `FirstApplicable` (default), `DenyOverrides`, and `AllowOverrides` are built in; supply your own via
 `WithCombiner`. Set the fallthrough with `WithDefaultEffect` (defaults to `Deny`).
 
+## 🗂 Category access
+
+The `categories` package answers "may this person do this action in this category" with the
+approved category model, built on the same engine (`Policy` with `DenyOverrides` inside each
+category). Subjects are `user:`, `group:` and `role:` strings, a category has a parent chain, and
+actions can imply other actions (`manage` implies `author`, `approve` and `read`).
+
+```go
+r := categories.New(ruleSet, []categories.Action{
+    {ID: "read"},
+    {ID: "author", Implies: []string{"read"}},
+})
+res := r.Resolve(ctx, []string{"user:alice", "group:finance"}, "team", "read")
+// res.Allowed, res.Reason ("entry" or "default-deny"), res.DecidedBy
+```
+
+The walk goes from the category up its parents. At the nearest category with a matching entry a
+Deny beats an Allow, otherwise Allow. `stopInheriting` ends the walk after that category, `*` is
+the last stop, and no match is a default deny. The `RuleSet` JSON is the shared wire format
+(`{"categories": {...}, "parents": {...}}`).
+
+The model is checked against the shared test vectors in `testdata/decide.json` (source commit in
+`testdata/SOURCE`). Refresh them with `task vectors:refresh VECTORS_REPO=../node-raci-editor`.
+
 ## 🛠 Develop
 
 ```bash

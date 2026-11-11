@@ -1,0 +1,2239 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "id": "read",
+      "label": "Read"
+    },
+    {
+      "id": "author",
+      "label": "Author",
+      "implies": ["read"]
+    },
+    {
+      "id": "approve",
+      "label": "Approve",
+      "implies": ["read"]
+    },
+    {
+      "id": "manage",
+      "label": "Manage",
+      "implies": ["author", "approve", "read"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "default deny with empty rule set",
+      "ruleSet": {
+        "categories": {},
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "default deny when only another user has an entry",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:bob",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "user allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "user deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "group allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "group:finance",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "role allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "role:approver",
+                "action": "approve",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "role:approver",
+          "action": "approve",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "group deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "group:finance",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "role deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "role:approver",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "role:approver",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "group entry does not match a person without the group",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "bob",
+        "groups": [],
+        "roles": []
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "subject match is case sensitive",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:Alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "inherit allow from parent",
+      "ruleSet": {
+        "categories": {
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "inherit allow from grandparent",
+      "ruleSet": {
+        "categories": {
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "root",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "empty category passes the question to its parent",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": []
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "nearest wins: child deny over parent allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "child re-allows over parent deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "child re-allows over grandparent deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "role:approver",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "root": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "role:approver",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "deny beats allow in the same category, allow first",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "group:finance",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "deny beats allow in the same category, deny first",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "group:finance",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "role deny beats user allow in the same category",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "role:approver",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "role:approver",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "first matching entry of the winning effect is reported (allow)",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "role:approver",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "first matching deny is reported among several denies",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "role:approver",
+                "action": "read",
+                "effect": "deny"
+              },
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "role:approver",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "manage implies read",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "manage implies author",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "manage implies approve",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "manage matches manage",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "manage",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "author implies read",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "author",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "read does not imply author",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "author",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "read does not imply manage",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "manage",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "author does not imply approve",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "author",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "approve",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "approve does not imply author",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "approve",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "author",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "deny on manage covers read and beats a read allow in the same category",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "deny on read does not cover manage",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "manage",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "child read allow decides read even when parent denies manage",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "child read allow does not answer author, parent manage allow does",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "author",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "star category allows when nothing else matches",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "group:finance",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "star category denies when nothing else matches",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "category entry beats star deny",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "parent entry beats star allow",
+      "ruleSet": {
+        "categories": {
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          },
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "root",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "star implication applies",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "anywhere",
+      "action": "approve",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "user:alice",
+          "action": "manage",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "asking about the star category itself",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "*",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "stopInheriting with a matching allow in the stopping category",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": true,
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "stopInheriting with a matching deny in the stopping category",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": true,
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "deny"
+        }
+      }
+    },
+    {
+      "name": "stopInheriting without a match hides a parent allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": true,
+            "entries": [
+              {
+                "subject": "user:bob",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "stopInheriting without a match skips the star category",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": true,
+            "entries": []
+          },
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "stopInheriting in the middle hides the root",
+      "ruleSet": {
+        "categories": {
+          "dept": {
+            "stopInheriting": true,
+            "entries": []
+          },
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "stopInheriting in the middle still answers from its own entry",
+      "ruleSet": {
+        "categories": {
+          "dept": {
+            "stopInheriting": true,
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "stopInheriting only matters after the child: child match wins first",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "stopInheriting": true,
+            "entries": []
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "stopInheriting that does not cover the asked action still stops",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": true,
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "manage",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "author",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "stopInheriting false behaves as absent",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "stopInheriting": false,
+            "entries": []
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "unknown category with no parents falls to the star category",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "ghost",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "unknown category with no parents and no star is denied",
+      "ruleSet": {
+        "categories": {
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "ghost",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "category known only through parents still inherits",
+      "ruleSet": {
+        "categories": {
+          "root": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "ghost": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "ghost",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "root",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "parent cycle without a match is denied",
+      "ruleSet": {
+        "categories": {
+          "a": {
+            "entries": []
+          },
+          "b": {
+            "entries": []
+          }
+        },
+        "parents": {
+          "a": "b",
+          "b": "a"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "a",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "parent cycle finds a match in the other node",
+      "ruleSet": {
+        "categories": {
+          "b": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "a": "b",
+          "b": "a"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "a",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "b",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "parent cycle falls through to the star category",
+      "ruleSet": {
+        "categories": {
+          "*": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "a": "b",
+          "b": "a"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "a",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "*",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "self parent does not loop",
+      "ruleSet": {
+        "categories": {
+          "a": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "a": "a"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "a",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "a",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "unknown asked action is denied",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "publish",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "publish",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "entry on an unknown action is ignored",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "publish",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": false,
+        "reason": "default-deny",
+        "decidedBy": null
+      }
+    },
+    {
+      "name": "entry on an unknown action does not hide a parent allow",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "publish",
+                "effect": "deny"
+              }
+            ]
+          },
+          "dept": {
+            "entries": [
+              {
+                "subject": "user:alice",
+                "action": "read",
+                "effect": "allow"
+              }
+            ]
+          }
+        },
+        "parents": {
+          "team": "dept",
+          "dept": "root"
+        }
+      },
+      "person": {
+        "id": "alice",
+        "groups": ["finance"],
+        "roles": ["approver"]
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "dept",
+          "subject": "user:alice",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    },
+    {
+      "name": "a person with only a user subject uses user entries",
+      "ruleSet": {
+        "categories": {
+          "team": {
+            "entries": [
+              {
+                "subject": "user:bob",
+                "action": "read",
+                "effect": "allow"
+              },
+              {
+                "subject": "group:finance",
+                "action": "read",
+                "effect": "deny"
+              }
+            ]
+          }
+        },
+        "parents": {}
+      },
+      "person": {
+        "id": "bob",
+        "groups": [],
+        "roles": []
+      },
+      "category": "team",
+      "action": "read",
+      "expect": {
+        "allowed": true,
+        "reason": "entry",
+        "decidedBy": {
+          "category": "team",
+          "subject": "user:bob",
+          "action": "read",
+          "effect": "allow"
+        }
+      }
+    }
+  ]
+}
