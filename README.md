@@ -1,6 +1,6 @@
 # go-authz 🔐
 
-> A small, dependency-free, general-purpose **authorization engine** for Go. You configure the model; the library provides the decisions. Nothing is hard-coded to one scheme.
+> A small, general-purpose **authorization engine** for Go. You configure the model; the library provides the decisions. Nothing is hard-coded to one scheme.
 
 ## 📦 Install
 
@@ -14,7 +14,8 @@ go get github.com/Bugs5382/go-authz
 - **allow / RBAC-style** rules — subjects hold roles, roles are granted permissions.
 - **responsibility matrix** — a `subject × resource × action` table with wildcards.
 - Framework-agnostic: it returns `Decision`s. No HTTP/gRPC middleware baked in — you wire it.
-- Zero third-party dependencies. Optional decision logging via the standard library `log/slog`.
+- Zero third-party dependencies in the root package and `ordered`. The `rbac` package depends only on
+  [go-apperr](https://github.com/Bugs5382/go-apperr), for its coded errors. Optional decision logging via the standard library `log/slog`.
 
 ## 🚀 Usage
 
@@ -99,6 +100,29 @@ pool := ordered.Pool(rs, people, "security-policy", "approve") // owners first, 
 `ordered.Decide` and `ordered.Pool` use `ordered.DefaultModel()`; build an `ordered.Model` to change the
 actions, owner kinds or superusers. The behaviour is pinned by the shared vectors in `testdata/ordered.json`
 (source commit in `testdata/SOURCE`); refresh with `task vectors:refresh COMMIT=<sha>`.
+
+## 🗂️ Permission catalog
+
+The `rbac` package (`github.com/Bugs5382/go-authz/rbac`) is the mechanism for a permission catalog: roles
+to permissions, scoped grants, per-resource overrides, sensitive documents and break-glass. It holds no
+permission or role of its own. A service writes its catalog as JSON, embeds it and loads it once:
+
+```go
+//go:embed catalog.json
+var catalogJSON []byte
+
+var catalog = rbac.MustParse(catalogJSON)
+
+d := catalog.Authorize(subject, "doc.write", &rbac.Resource{Category: "Facilities", CategoryLineage: lineage})
+if err := d.Err(); err != nil { // coded AUTHZ_DENIED through go-apperr
+    return err
+}
+```
+
+`HasCapability` is the coarse check, `Authorize` the per-resource decision with a stable `Reason`, and
+`rbac.Diff` compares a service's embedded catalog with the canonical one. The catalog schema, the decision
+order and the embed-and-refresh pattern are in [docs/rbac.md](docs/rbac.md). It does not evaluate category
+rules; that is `ordered`.
 
 ## 🛠 Develop
 

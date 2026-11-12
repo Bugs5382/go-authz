@@ -5,7 +5,7 @@ hook-enforced rules). Keep this file current when the build, layout, or public A
 
 ## What this is
 
-A small, dependency-free, general-purpose authorization engine for Go. The consuming application
+A small, general-purpose authorization engine for Go. The consuming application
 configures the model (rules, a default effect, a combining algorithm); the library provides the
 decision types and evaluation. It is framework-agnostic: it returns decisions and ships no
 HTTP/gRPC middleware.
@@ -33,6 +33,9 @@ are fine, removals need a major bump.
 - `rbac.go`, `matrix.go` - the RBAC and responsibility-matrix rule types.
 - `ordered/` - the ordered (firewall) access model, a separate package; `Decide`, `Pool`, `Model`.
   Pinned by `testdata/ordered.json` (source in `testdata/SOURCE`, refresh with `task vectors:refresh`).
+- `rbac/` - the permission catalog, a separate package loaded from a JSON file the consuming service
+  embeds; `Catalog`, `Authorize`, `HasCapability`, `Diff`. Depends only on go-apperr. Pinned by
+  `testdata/rbac.json` (`task vectors:rbac:refresh`). No product names, permissions or roles in code, docs or tests.
 - `doc.go`, `example_test.go` - package doc and runnable examples.
 - `authz_test.go` - unit tests.
 
