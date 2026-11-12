@@ -110,3 +110,40 @@ func TestZeroModelDeniesAndCyclesEnd(t *testing.T) {
 		t.Error("a cycle ends the walk after visiting each category once")
 	}
 }
+
+func TestSuperusersNeverExemptObligations(t *testing.T) {
+	rs := RuleSet{Categories: map[string]Category{
+		"c": {Entries: []Entry{
+			{Subject: Everyone, Action: "approve", Effect: Deny},
+			{Subject: Everyone, Action: "ack", Effect: Deny},
+			{Subject: Everyone, Action: "read", Effect: Deny},
+		}},
+	}}
+	root := Person{ID: "r", Roles: []string{"root"}}
+	m := DefaultModel()
+	m.Superusers = &Superusers{Subjects: []string{"role:root"}, Actions: []string{"read", "approve", "ack"}}
+
+	// Read is listed and not an obligation: exempt, the deny is only reported.
+	d := m.Decide(rs, root, "c", "read")
+	if !d.Allowed || d.Reason != ReasonSuperuser || d.ConfiguredBlock == nil {
+		t.Errorf("read = %+v, want a superuser allow with a configured block", d)
+	}
+	// Approve and ack are listed by the host but never exempt: the rows decide.
+	for _, act := range []string{"approve", "ack"} {
+		d := m.Decide(rs, root, "c", act)
+		if d.Allowed || d.Reason == ReasonSuperuser || d.ConfiguredBlock != nil {
+			t.Errorf("%s = %+v, want the rows to decide", act, d)
+		}
+	}
+	// An action that is not named approve or ack but is an obligation is not exempt either.
+	m.Actions = append(m.Actions, Action{ID: "attest", Kind: KindObligation})
+	m.Superusers.Actions = append(m.Superusers.Actions, "attest")
+	if d := m.Decide(rs, root, "c", "attest"); d.Allowed || d.Reason == ReasonSuperuser {
+		t.Errorf("attest = %+v, want not exempt", d)
+	}
+	// A custom action named approve that is not an obligation is still never exempt.
+	m.Actions = []Action{{ID: "approve"}, {ID: "read"}}
+	if d := m.Decide(rs, root, "c", "approve"); d.Allowed || d.Reason == ReasonSuperuser {
+		t.Errorf("custom approve = %+v, want not exempt", d)
+	}
+}

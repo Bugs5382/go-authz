@@ -120,10 +120,19 @@ func (e *evaluation) ownerHas(id string) bool {
 	return a.Kind != KindObligation
 }
 
+// superuserHas says whether the seat is exempt for the action. Only access
+// actions can be listed to any effect: an obligation, and the actions named
+// approve and ack, are never exempt, even when the host lists them, and follow
+// the rows like anyone else's.
+func (e *evaluation) superuserHas(id string) bool {
+	return slices.Contains(e.m.Superusers.Actions, id) &&
+		e.byID[id].Kind != KindObligation && id != "approve" && id != "ack"
+}
+
 // core answers one action with no implication and no gating. rulesOnly leaves
 // the superuser seat out, to find the entry that would have denied it.
 func (e *evaluation) core(act string, rulesOnly bool) Decision {
-	if su := e.m.Superusers; !rulesOnly && su != nil && slices.Contains(su.Actions, act) {
+	if su := e.m.Superusers; !rulesOnly && su != nil && e.superuserHas(act) {
 		for _, s := range su.Subjects {
 			if e.subjects[s] {
 				return Decision{Allowed: true, Reason: ReasonSuperuser, at: e.category}
