@@ -93,8 +93,10 @@ pool := ordered.Pool(rs, people, "security-policy", "approve") // owners first, 
 - Owners always have read, author, approve and manage (never ack), immune to a deny, inherited down.
 - An allowed author, approve or manage gives read, even over a read deny; manage also gives author.
 - `ack` requires `read`: a read deny turns it off (`Reason == "requires"`, `GatedBy == "read"`).
-- A superuser seat (`Model.Superusers`, for example `role:root`) is exempt for the actions it lists; a deny
-  that would have applied is ignored and reported as `Decision.ConfiguredBlock`.
+- A superuser seat (`Model.Superusers`, for example `role:root`, exactly one seat) is exempt only for the
+  access actions it lists, for example `read`, `author` and `manage`; a deny that would have applied is
+  ignored and reported as `Decision.ConfiguredBlock`. `approve` and `ack` are never exempt, even if a host
+  lists them: obligations follow the rows for the seat too. Site admins that are not the seat follow the rows.
 - `stopInheriting` is ignored by this model.
 
 `ordered.Decide` and `ordered.Pool` use `ordered.DefaultModel()`; build an `ordered.Model` to change the

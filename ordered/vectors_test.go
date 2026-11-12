@@ -90,8 +90,8 @@ func TestVectors(t *testing.T) {
 	if v.Model != "ordered" {
 		t.Skipf("vectors file is for model %q, not implemented here", v.Model)
 	}
-	if len(v.Cases) < 47 {
-		t.Fatalf("expected at least 47 cases, got %d", len(v.Cases))
+	if len(v.Cases) < 74 {
+		t.Fatalf("expected at least 74 cases, got %d", len(v.Cases))
 	}
 	m := ordered.Model{Actions: v.Actions, Superusers: v.Options.Superusers}
 	for _, c := range v.Cases {

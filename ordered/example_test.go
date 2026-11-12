@@ -67,18 +67,26 @@ func ExampleModel_superusers() {
 	m := ordered.DefaultModel()
 	m.Superusers = &ordered.Superusers{
 		Subjects: []string{"role:root"},
-		Actions:  []string{"read", "author", "approve", "manage"},
+		Actions:  []string{"read", "author", "manage"},
 	}
 	rs := ordered.RuleSet{Categories: map[string]ordered.Category{
-		"c": {Entries: []ordered.Entry{{Subject: ordered.Everyone, Action: "read", Effect: ordered.Deny}}},
+		"c": {Entries: []ordered.Entry{
+			{Subject: ordered.Everyone, Action: "read", Effect: ordered.Deny},
+			{Subject: ordered.Everyone, Action: "approve", Effect: ordered.Deny},
+		}},
 	}}
 	root := ordered.Person{ID: "someone", Roles: []string{"root"}}
 
 	// The seat follows the role, a deny is ignored, and it is reported.
 	d := m.Decide(rs, root, "c", "read")
 	fmt.Println(d.Allowed, d.Reason, d.ConfiguredBlock.Subject)
+
+	// Approve and ack are never exempt, even if a host lists them: the rows decide.
+	d = m.Decide(rs, root, "c", "approve")
+	fmt.Println(d.Allowed, d.Reason)
 	// Output:
 	// true superuser everyone:*
+	// false entry
 }
 
 func ExamplePool() {

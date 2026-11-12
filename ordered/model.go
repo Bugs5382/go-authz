@@ -11,9 +11,12 @@
 // Owners always have the actions their category lists as theirs, whatever any
 // row says. An allowed higher action gives the lower actions it implies, even
 // over an explicit deny of the lower one. An action that requires another is
-// denied when the required one is. A host-configured superuser seat is exempt
-// for the actions it lists, and a deny that would have applied is reported as
-// Decision.ConfiguredBlock. The default is deny.
+// denied when the required one is. A host-configured superuser seat (one seat,
+// for example role:root) is exempt only for the access actions it lists, such
+// as read, author and manage, and a deny that would have applied is reported as
+// Decision.ConfiguredBlock. Approve and ack, and any obligation, are never
+// exempt, even when listed: they follow the rows for the seat too. The default
+// is deny.
 //
 // The behaviour is pinned by the shared vectors file in testdata/ordered.json.
 // The package is independent of the root go-authz package.
@@ -128,13 +131,16 @@ type Action struct {
 	OwnerHas *bool `json:"ownerHas,omitempty"`
 }
 
-// Superusers is the host-configured seat that is exempt from the rows.
+// Superusers is the host-configured seat that is exempt from the rows for the
+// access actions it lists. Obligations (Kind obligation) and the actions named
+// approve and ack are never exempt, even when listed.
 type Superusers struct {
 	// Subjects name the seat, for example "role:root". The seat follows the
 	// subject, never a name.
 	Subjects []string `json:"subjects"`
-	// Actions are the actions the seat always has. An action not listed
-	// follows the rows like anyone else's.
+	// Actions are the access actions the seat always has, for example read,
+	// author and manage. An action not listed, and any obligation, follows the
+	// rows like anyone else's.
 	Actions []string `json:"actions"`
 }
 
