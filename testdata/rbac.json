@@ -1,0 +1,1482 @@
+{
+  "version": 1,
+  "catalog": {
+    "version": 1,
+    "baselineRole": "viewer",
+    "read": {
+      "permission": "doc.read",
+      "sensitivePermission": "doc.read_sensitive",
+      "obfuscateRoles": [
+        "superuser"
+      ]
+    },
+    "permissions": [
+      {
+        "name": "doc.read"
+      },
+      {
+        "name": "doc.read_sensitive"
+      },
+      {
+        "name": "doc.write",
+        "scoped": true,
+        "scopeRole": "editor",
+        "bypassRoles": [
+          "superuser"
+        ]
+      },
+      {
+        "name": "doc.submit",
+        "scoped": true,
+        "scopeRole": "editor",
+        "bypassRoles": [
+          "superuser"
+        ]
+      },
+      {
+        "name": "doc.publish",
+        "scoped": true,
+        "scopeRole": "reviewer"
+      },
+      {
+        "name": "template.manage"
+      },
+      {
+        "name": "audit.read"
+      },
+      {
+        "name": "user.manage"
+      }
+    ],
+    "roles": [
+      {
+        "name": "viewer",
+        "permissions": [
+          "doc.read"
+        ]
+      },
+      {
+        "name": "editor",
+        "permissions": [
+          "doc.read",
+          "doc.write",
+          "doc.submit"
+        ]
+      },
+      {
+        "name": "reviewer",
+        "permissions": [
+          "doc.read",
+          "doc.publish"
+        ]
+      },
+      {
+        "name": "designer",
+        "permissions": [
+          "doc.read",
+          "template.manage"
+        ]
+      },
+      {
+        "name": "auditor",
+        "permissions": [
+          "doc.read",
+          "audit.read"
+        ]
+      },
+      {
+        "name": "superuser",
+        "permissions": [
+          "*"
+        ]
+      }
+    ]
+  },
+  "authorize": [
+    {
+      "name": "viewer reads a plain document",
+      "subject": {
+        "userId": "u1"
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "a read with no resource is the capability check alone",
+      "subject": {
+        "userId": "u1"
+      },
+      "permission": "doc.read",
+      "resource": null,
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "viewer lacks write",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "missing_capability"
+      }
+    },
+    {
+      "name": "editor with a grant writes in the category",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "editor with a grant submits in the category",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.submit",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "editor outside the granted category is out of scope",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D2",
+        "category": "People",
+        "categoryLineage": [
+          "People"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "editor without any grant is out of scope",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "a scoped write with no resource is out of scope",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": null,
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "a grant on the parent covers the child",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Workplace"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D3",
+        "category": "Facilities",
+        "categoryLineage": [
+          "Facilities",
+          "Workplace"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "a grant on the parent covers the parent",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Workplace"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D3",
+        "category": "Workplace",
+        "categoryLineage": [
+          "Workplace"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "a grant on the parent does not cover a sibling branch",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Workplace"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D4",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "a grant on the child does not cover the parent",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Facilities"
+          }
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D3",
+        "category": "Workplace",
+        "categoryLineage": [
+          "Workplace"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "with no lineage the category itself is matched",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Travel"
+          }
+        ]
+      },
+      "permission": "doc.submit",
+      "resource": {
+        "id": "D5",
+        "category": "Travel"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "an editor grant does not satisfy publish",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "missing_capability"
+      }
+    },
+    {
+      "name": "a scoped-only reviewer publishes in the category",
+      "subject": {
+        "userId": "u1",
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "a role without the grant but with the reviewer role is out of scope",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "reviewer"
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "superuser writes anywhere",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.write",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "superuser submits anywhere",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.submit",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "superuser does not publish without a grant",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "superuser publishes with a reviewer grant",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ],
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D1",
+        "category": "Finance",
+        "categoryLineage": [
+          "Finance"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "superuser publishes in a child of the granted category",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ],
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Workplace"
+          }
+        ]
+      },
+      "permission": "doc.publish",
+      "resource": {
+        "id": "D3",
+        "category": "Facilities",
+        "categoryLineage": [
+          "Facilities",
+          "Workplace"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "superuser scoped write with no resource is out of scope",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.write",
+      "resource": null,
+      "expect": {
+        "effect": "deny",
+        "reason": "out_of_category_scope"
+      }
+    },
+    {
+      "name": "designer manages templates",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "designer"
+        ]
+      },
+      "permission": "template.manage",
+      "resource": null,
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "designer cannot read the audit log",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "designer"
+        ]
+      },
+      "permission": "audit.read",
+      "resource": null,
+      "expect": {
+        "effect": "deny",
+        "reason": "missing_capability"
+      }
+    },
+    {
+      "name": "auditor reads the audit log",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "auditor"
+        ]
+      },
+      "permission": "audit.read",
+      "resource": null,
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "superuser holds a permission added later",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "report.export",
+      "resource": null,
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "auditor lacks a permission outside its grants",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "auditor"
+        ]
+      },
+      "permission": "report.export",
+      "resource": null,
+      "expect": {
+        "effect": "deny",
+        "reason": "missing_capability"
+      }
+    },
+    {
+      "name": "no role holds the sensitive read",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.read_sensitive",
+      "resource": null,
+      "expect": {
+        "effect": "deny",
+        "reason": "missing_capability"
+      }
+    },
+    {
+      "name": "the individual grant holds the sensitive read",
+      "subject": {
+        "userId": "u1",
+        "readSensitive": true
+      },
+      "permission": "doc.read_sensitive",
+      "resource": null,
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "break glass shows a document",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "breakGlass": {
+          "D1": true
+        }
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "break_glass"
+      }
+    },
+    {
+      "name": "break glass on another document does not apply",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "breakGlass": {
+          "D9": true
+        }
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "sensitive: a viewer is denied",
+      "subject": {
+        "userId": "erin",
+        "roles": [
+          "viewer"
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: a subject with no user id is denied",
+      "subject": {},
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: the assigned author reads",
+      "subject": {
+        "userId": "bob",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "assigned"
+      }
+    },
+    {
+      "name": "sensitive: the assigned approver reads",
+      "subject": {
+        "userId": "carol",
+        "roles": [
+          "reviewer"
+        ],
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "assigned"
+      }
+    },
+    {
+      "name": "sensitive: an assigned user with no role reads",
+      "subject": {
+        "userId": "bob"
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "assigned"
+      }
+    },
+    {
+      "name": "sensitive: an unassigned editor of the category is denied",
+      "subject": {
+        "userId": "dave",
+        "roles": [
+          "editor"
+        ],
+        "scopedGrants": [
+          {
+            "role": "editor",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: an unassigned reviewer of the category is denied",
+      "subject": {
+        "userId": "heidi",
+        "roles": [
+          "reviewer"
+        ],
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: an auditor is denied",
+      "subject": {
+        "userId": "grace",
+        "roles": [
+          "auditor"
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: a superuser is denied by role alone",
+      "subject": {
+        "userId": "alice",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "sensitive"
+      }
+    },
+    {
+      "name": "sensitive: the individual grant reads",
+      "subject": {
+        "userId": "frank",
+        "readSensitive": true
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "sensitive: an override allow reads",
+      "subject": {
+        "userId": "frank",
+        "overrides": [
+          {
+            "resourceId": "D2",
+            "grant": "allow"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "override_allow"
+      }
+    },
+    {
+      "name": "sensitive: break glass reads",
+      "subject": {
+        "userId": "frank",
+        "breakGlass": {
+          "D2": true
+        }
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "break_glass"
+      }
+    },
+    {
+      "name": "override allow shows a document",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": "allow"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "override_allow"
+      }
+    },
+    {
+      "name": "override deny hides a document",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": "deny"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "excluded"
+      }
+    },
+    {
+      "name": "override deny obfuscates for the configured role",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "superuser"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": "deny"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "obfuscate",
+        "reason": "excluded"
+      }
+    },
+    {
+      "name": "override deny beats break glass",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": "deny"
+          }
+        ],
+        "breakGlass": {
+          "D1": true
+        }
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "deny",
+        "reason": "excluded"
+      }
+    },
+    {
+      "name": "override allow beats a sensitive document",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D2",
+            "grant": "allow"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D2",
+        "category": "Expenses",
+        "categoryLineage": [
+          "Expenses",
+          "Finance"
+        ],
+        "sensitive": true,
+        "authors": [
+          "bob"
+        ],
+        "approvers": [
+          "carol"
+        ]
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "override_allow"
+      }
+    },
+    {
+      "name": "a blank override has no opinion",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": ""
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "an override on another document does not apply",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "viewer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D9",
+            "grant": "deny"
+          }
+        ]
+      },
+      "permission": "doc.read",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    },
+    {
+      "name": "an override does not touch a non-read permission",
+      "subject": {
+        "userId": "u1",
+        "roles": [
+          "designer"
+        ],
+        "overrides": [
+          {
+            "resourceId": "D1",
+            "grant": "deny"
+          }
+        ]
+      },
+      "permission": "template.manage",
+      "resource": {
+        "id": "D1",
+        "category": "Finance"
+      },
+      "expect": {
+        "effect": "allow",
+        "reason": "granted"
+      }
+    }
+  ],
+  "capability": [
+    {
+      "name": "superuser holds publish",
+      "subject": {
+        "userId": "u",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "doc.publish",
+      "expect": true
+    },
+    {
+      "name": "viewer does not hold publish",
+      "subject": {
+        "userId": "u",
+        "roles": [
+          "viewer"
+        ]
+      },
+      "permission": "doc.publish",
+      "expect": false
+    },
+    {
+      "name": "a scoped-only reviewer holds publish",
+      "subject": {
+        "userId": "u",
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "doc.publish",
+      "expect": true
+    },
+    {
+      "name": "a scoped reviewer does not hold template.manage",
+      "subject": {
+        "userId": "u",
+        "scopedGrants": [
+          {
+            "role": "reviewer",
+            "category": "Finance"
+          }
+        ]
+      },
+      "permission": "template.manage",
+      "expect": false
+    },
+    {
+      "name": "the baseline role holds read with no roles",
+      "subject": {},
+      "permission": "doc.read",
+      "expect": true
+    },
+    {
+      "name": "the individual grant confers the sensitive read",
+      "subject": {
+        "userId": "u",
+        "readSensitive": true
+      },
+      "permission": "doc.read_sensitive",
+      "expect": true
+    },
+    {
+      "name": "the individual grant confers nothing else",
+      "subject": {
+        "userId": "u",
+        "readSensitive": true
+      },
+      "permission": "audit.read",
+      "expect": false
+    },
+    {
+      "name": "a wildcard role holds a permission added later",
+      "subject": {
+        "userId": "u",
+        "roles": [
+          "superuser"
+        ]
+      },
+      "permission": "report.export",
+      "expect": true
+    },
+    {
+      "name": "no role holds the sensitive read",
+      "subject": {
+        "userId": "u",
+        "roles": [
+          "superuser",
+          "editor",
+          "reviewer",
+          "designer",
+          "auditor",
+          "viewer"
+        ]
+      },
+      "permission": "doc.read_sensitive",
+      "expect": false
+    }
+  ],
+  "permissionsForRoles": [
+    {
+      "name": "no roles still hold the baseline",
+      "roles": [],
+      "expect": [
+        "doc.read"
+      ]
+    },
+    {
+      "name": "an unknown role adds nothing",
+      "roles": [
+        "admin"
+      ],
+      "expect": [
+        "doc.read"
+      ]
+    },
+    {
+      "name": "editor",
+      "roles": [
+        "editor"
+      ],
+      "expect": [
+        "doc.read",
+        "doc.write",
+        "doc.submit"
+      ]
+    },
+    {
+      "name": "two roles, in catalog order",
+      "roles": [
+        "auditor",
+        "reviewer"
+      ],
+      "expect": [
+        "doc.read",
+        "doc.publish",
+        "audit.read"
+      ]
+    },
+    {
+      "name": "the wildcard role holds everything but the sensitive read",
+      "roles": [
+        "superuser"
+      ],
+      "expect": [
+        "doc.read",
+        "doc.write",
+        "doc.submit",
+        "doc.publish",
+        "template.manage",
+        "audit.read",
+        "user.manage"
+      ]
+    }
+  ]
+}
