@@ -31,6 +31,8 @@ are fine, removals need a major bump.
 - `policy.go` - `Policy`, options, `Decide`.
 - `match.go` - functional rules and matchers.
 - `rbac.go`, `matrix.go` - the RBAC and responsibility-matrix rule types.
+- `ordered/` - the ordered (firewall) access model, a separate package; `Decide`, `Pool`, `Model`.
+  Pinned by `testdata/ordered.json` (source in `testdata/SOURCE`, refresh with `task vectors:refresh`).
 - `doc.go`, `example_test.go` - package doc and runnable examples.
 - `authz_test.go` - unit tests.
 

@@ -42,6 +42,13 @@ tasks:
         if [ -n "$unformatted" ]; then echo "gofmt needed on:"; echo "$unformatted"; exit 1; fi
       - golangci-lint run
       - yamllint .
+  vectors:refresh:
+    desc: "Refresh testdata/ordered.json from a node-raci-editor commit: task vectors:refresh COMMIT=<sha>"
+    requires:
+      vars: [COMMIT]
+    cmds:
+      - gh api "repos/Bugs5382/node-raci-editor/contents/vectors/ordered.json?ref={{.COMMIT}}" -q .content | base64 -d > testdata/ordered.json
+      - printf 'repo{{":"}} Bugs5382/node-raci-editor\ncommit{{":"}} {{.COMMIT}}\npath{{":"}} vectors/ordered.json\n' > testdata/SOURCE
   lint-init:
     desc: Install lint dependencies via Brew
     cmds:
